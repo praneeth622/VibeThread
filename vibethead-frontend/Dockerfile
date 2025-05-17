@@ -13,6 +13,9 @@ RUN npm ci
 # Copy all files
 COPY . .
 
+# Update browserslist database
+RUN npx update-browserslist-db@latest
+
 # Build the application
 RUN npm run build
 

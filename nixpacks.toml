@@ -1,0 +1,8 @@
+[phases.setup]
+nixPkgs = ["nodejs", "npm"]
+
+[phases.build]
+cmds = ["cd vibethead-frontend", "npm install", "npm run build"]
+
+[start]
+cmd = "cd vibethead-frontend && npm run start"
