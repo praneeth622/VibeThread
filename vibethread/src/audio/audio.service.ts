@@ -42,7 +42,7 @@ export class AudioService {
           return;
         }
 
-        const command = `yt-dlp -x --audio-format mp3 -o "${outputTemplate}" "${url}"`;
+        const command = `yt-dlp --cookies src/audio/cookies.txt -x --audio-format mp3 -o "${outputTemplate}" "${url}"`;
         console.log(`Running command: ${command}`);
 
         exec(command, (error, stdout, stderr) => {

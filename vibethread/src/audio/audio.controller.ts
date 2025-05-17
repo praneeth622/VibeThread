@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post, Res } from '@nestjs/common';
+import { Controller, Get, Post, Body, Res, Options, HttpCode } from '@nestjs/common';
 import { Response } from 'express';
 import { AudioService } from './audio.service';
 
@@ -20,8 +20,15 @@ export class AudioController {
         }
     }
 
+    // Add OPTIONS handler for preflight requests
+    @Options('extract-audio')
+    @HttpCode(204)
+    preflightExtractAudio() {
+        return;
+    }
+
     @Post('extract-audio')
-    async extractAudio (@Body() body : { url: string }, @Res() res: Response) {
+    async extractAudio(@Body() body: { url: string }, @Res() res: Response) {
         const { url } = body;
         console.log('URL:', url);
 
