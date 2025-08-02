@@ -1,10 +1,17 @@
 import { Module } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AudioModule } from './audio/audio.module';
 
 @Module({
-  imports: [AudioModule],
+  imports: [
+    ConfigModule.forRoot({
+      isGlobal: true,
+      envFilePath: '.env',
+    }),
+    AudioModule
+  ],
   controllers: [AppController],
   providers: [AppService],
 })

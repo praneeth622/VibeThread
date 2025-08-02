@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Res, Options, HttpCode } from '@nestjs/common';
+import { Controller, Get, Post, Body, Res, Options, HttpCode, Query } from '@nestjs/common';
 import { Response } from 'express';
 import { AudioService } from './audio.service';
 
@@ -41,6 +41,92 @@ export class AudioController {
         } catch (error) {
             return res.status(500).json({
                 message: 'Error extracting audio',
+                error: error.message
+            });
+        }
+    }
+
+    // Spotify OAuth endpoints
+    @Options('spotify/auth')
+    @HttpCode(204)
+    preflightSpotifyAuth() {
+        return;
+    }
+
+    @Post('spotify/auth')
+    async generateSpotifyAuthUrl(@Res() res: Response) {
+        console.log('Generating Spotify auth URL');
+        try {
+            const authUrl = await this.audioService.generateSpotifyAuthUrl();
+            return res.status(200).json({
+                authUrl
+            });
+        } catch (error) {
+            return res.status(500).json({
+                message: 'Error generating Spotify auth URL',
+                error: error.message
+            });
+        }
+    }
+
+    @Options('spotify/callback')
+    @HttpCode(204)
+    preflightSpotifyCallback() {
+        return;
+    }
+
+    @Post('spotify/callback')
+    async handleSpotifyCallback(@Body() body: { code: string }, @Res() res: Response) {
+        try {
+            const tokens = await this.audioService.exchangeSpotifyCode(body.code);
+            return res.status(200).json({
+                message: 'Spotify authorization successful',
+                tokens
+            });
+        } catch (error) {
+            return res.status(500).json({
+                message: 'Error handling Spotify callback',
+                error: error.message
+            });
+        }
+    }
+
+    @Options('spotify/create-playlist')
+    @HttpCode(204)
+    preflightCreatePlaylist() {
+        return;
+    }
+
+    @Post('spotify/create-playlist')
+    async createSpotifyPlaylist(
+        @Body() body: { 
+            accessToken: string;
+            playlistName: string;
+            playlistDescription?: string;
+            isPublic?: boolean;
+            selectedTracks: Array<{
+                spotifyId: string;
+                title: string;
+                artists: string;
+            }>;
+        }, 
+        @Res() res: Response
+    ) {
+        try {
+            const playlist = await this.audioService.createSpotifyPlaylist(
+                body.accessToken,
+                body.playlistName,
+                body.playlistDescription,
+                body.isPublic,
+                body.selectedTracks
+            );
+            return res.status(200).json({
+                message: 'Playlist created successfully',
+                playlist
+            });
+        } catch (error) {
+            return res.status(500).json({
+                message: 'Error creating Spotify playlist',
                 error: error.message
             });
         }

@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { exec } from 'child_process';
 import * as path from 'path';
 import * as fs from 'fs';
@@ -9,7 +10,30 @@ const FormData = require('form-data');
 
 @Injectable()
 export class AudioService {
-  constructor() {}
+  private readonly spotifyClientId: string;
+  private readonly spotifyClientSecret: string;
+  private readonly redirectUri: string;
+
+  constructor(private configService: ConfigService) {
+    const clientId = this.configService.get<string>('SPOTIFY_CLIENT_ID');
+    const clientSecret = this.configService.get<string>('SPOTIFY_CLIENT_SECRET');
+    
+    if (!clientId) {
+      throw new Error('SPOTIFY_CLIENT_ID is not set in environment variables');
+    }
+    if (!clientSecret) {
+      throw new Error('SPOTIFY_CLIENT_SECRET is not set in environment variables');
+    }
+    
+    this.spotifyClientId = clientId;
+    this.spotifyClientSecret = clientSecret;
+    this.redirectUri = this.configService.get<string>('SPOTIFY_REDIRECT_URI') || 'http://localhost:3001/spotify-callback';
+    
+    // Debug logging to verify environment variables are loaded
+    console.log('Spotify Client ID loaded:', this.spotifyClientId ? 'Yes' : 'No');
+    console.log('Spotify Client Secret loaded:', this.spotifyClientSecret ? 'Yes' : 'No');
+    console.log('Spotify Redirect URI:', this.redirectUri);
+  }
 
   async downloadInstagramAudioAsMP3(
     url: string,
@@ -273,5 +297,147 @@ export class AudioService {
         console.error('Error:', error.message);
         cb(error, null, null);
       });
+  }
+
+  // Spotify OAuth and Playlist Creation Methods
+  async generateSpotifyAuthUrl(): Promise<string> {
+    console.log('Checking Spotify credentials...');
+    console.log('Client ID:', this.spotifyClientId ? 'Present' : 'Missing');
+    console.log('Client Secret:', this.spotifyClientSecret ? 'Present' : 'Missing');
+    console.log('Redirect URI:', this.redirectUri);
+    
+    if (!this.spotifyClientId) {
+      throw new Error('Spotify Client ID not configured');
+    }
+
+    const scopes = [
+      'playlist-modify-public',
+      'playlist-modify-private',
+      'user-read-private'
+    ].join(' ');
+
+    const params = new URLSearchParams({
+      response_type: 'code',
+      client_id: this.spotifyClientId,
+      scope: scopes,
+      redirect_uri: this.redirectUri,
+      state: crypto.randomBytes(16).toString('hex')
+    });
+
+    const authUrl = `https://accounts.spotify.com/authorize?${params.toString()}`;
+    console.log('Generated Spotify auth URL:', authUrl);
+    
+    return authUrl;
+  }
+
+  async exchangeSpotifyCode(code: string): Promise<any> {
+    if (!this.spotifyClientId || !this.spotifyClientSecret) {
+      throw new Error('Spotify credentials not configured');
+    }
+
+    const params = new URLSearchParams({
+      grant_type: 'authorization_code',
+      code: code,
+      redirect_uri: this.redirectUri
+    });
+
+    const authHeader = Buffer.from(`${this.spotifyClientId}:${this.spotifyClientSecret}`).toString('base64');
+
+    try {
+      const response = await axios.post('https://accounts.spotify.com/api/token', params, {
+        headers: {
+          'Authorization': `Basic ${authHeader}`,
+          'Content-Type': 'application/x-www-form-urlencoded'
+        }
+      });
+
+      return response.data;
+    } catch (error) {
+      console.error('Error exchanging Spotify code:', error.response?.data || error.message);
+      throw new Error('Failed to exchange authorization code for tokens');
+    }
+  }
+
+  async getSpotifyUserProfile(accessToken: string): Promise<any> {
+    try {
+      const response = await axios.get('https://api.spotify.com/v1/me', {
+        headers: {
+          'Authorization': `Bearer ${accessToken}`
+        }
+      });
+
+      return response.data;
+    } catch (error) {
+      console.error('Error getting Spotify user profile:', error.response?.data || error.message);
+      throw new Error('Failed to get user profile');
+    }
+  }
+
+  async createSpotifyPlaylist(
+    accessToken: string,
+    playlistName: string,
+    playlistDescription?: string,
+    isPublic: boolean = false,
+    selectedTracks: Array<{
+      spotifyId: string;
+      title: string;
+      artists: string;
+    }> = []
+  ): Promise<any> {
+    try {
+      // Get user profile to get user ID
+      const userProfile = await this.getSpotifyUserProfile(accessToken);
+      const userId = userProfile.id;
+
+      // Create the playlist
+      const playlistResponse = await axios.post(
+        `https://api.spotify.com/v1/users/${userId}/playlists`,
+        {
+          name: playlistName,
+          description: playlistDescription || 'Created with VibeThread',
+          public: isPublic
+        },
+        {
+          headers: {
+            'Authorization': `Bearer ${accessToken}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      const playlist = playlistResponse.data;
+
+      // Add tracks to the playlist if any are provided
+      if (selectedTracks.length > 0) {
+        const trackUris = selectedTracks
+          .filter(track => track.spotifyId)
+          .map(track => `spotify:track:${track.spotifyId}`);
+
+        if (trackUris.length > 0) {
+          await axios.post(
+            `https://api.spotify.com/v1/playlists/${playlist.id}/tracks`,
+            {
+              uris: trackUris
+            },
+            {
+              headers: {
+                'Authorization': `Bearer ${accessToken}`,
+                'Content-Type': 'application/json'
+              }
+            }
+          );
+        }
+      }
+
+      return {
+        id: playlist.id,
+        name: playlist.name,
+        url: playlist.external_urls.spotify,
+        tracksAdded: selectedTracks.length
+      };
+    } catch (error) {
+      console.error('Error creating Spotify playlist:', error.response?.data || error.message);
+      throw new Error('Failed to create Spotify playlist');
+    }
   }
 }
