@@ -60,6 +60,16 @@ const config: Config = {
           '4': 'hsl(var(--chart-4))',
           '5': 'hsl(var(--chart-5))',
         },
+        pastel: {
+          lavender: 'hsl(var(--pastel-lavender))',
+          mint: 'hsl(var(--pastel-mint))',
+          peach: 'hsl(var(--pastel-peach))',
+          sky: 'hsl(var(--pastel-sky))',
+          rose: 'hsl(var(--pastel-rose))',
+          cream: 'hsl(var(--pastel-cream))',
+          sage: 'hsl(var(--pastel-sage))',
+          coral: 'hsl(var(--pastel-coral))',
+        },
       },
       keyframes: {
         'accordion-down': {

@@ -12,7 +12,7 @@ import { ResultCard } from '@/components/result-card';
 import { ErrorAlert } from '@/components/error-alert';
 import { isValidInstagramUrl } from '@/lib/utils';
 import { AudioResult } from '@/lib/types';
-import { Sparkles, Instagram, Youtube, Music2, Zap, ArrowRight } from 'lucide-react';
+import { Sparkles, Instagram, Youtube, Music2, Zap, ArrowRight, Heart, Star } from 'lucide-react';
 
 // Updated interface to match the backend response structure
 interface Track {
@@ -128,8 +128,8 @@ export default function ExtractorForm() {
     
     if (!url.trim()) {
       toast({
-        title: "Error",
-        description: "Please enter a URL",
+        title: "Oops! 🌸",
+        description: "Please enter a URL to work our magic",
         variant: "destructive",
       });
       return;
@@ -140,8 +140,8 @@ export default function ExtractorForm() {
       new URL(url);
     } catch (err) {
       toast({
-        title: "Invalid URL",
-        description: "Please enter a valid URL",
+        title: "Invalid URL ✨",
+        description: "Please enter a valid URL so we can create magic",
         variant: "destructive",
       });
       return;
@@ -160,14 +160,14 @@ export default function ExtractorForm() {
         
         if (transformedResults.length === 0) {
           toast({
-            title: "No music found",
-            description: "We couldn't identify any music in this media",
+            title: "No music found 🎵",
+            description: "We couldn't find any music in this magical media",
             variant: "default",
           });
         } else {
           toast({
-            title: "Success!",
-            description: `Found ${transformedResults.length} track(s)`,
+            title: "Success! ✨",
+            description: `Found ${transformedResults.length} beautiful track(s)`,
           });
         }
       } else {
@@ -176,7 +176,7 @@ export default function ExtractorForm() {
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to extract audio");
       toast({
-        title: "Extraction Failed",
+        title: "Extraction Failed 💔",
         description: err instanceof Error ? err.message : "Failed to extract audio",
         variant: "destructive",
       });
@@ -186,9 +186,9 @@ export default function ExtractorForm() {
   };
 
   const platformIcons = [
-    { icon: <Instagram className="w-5 h-5" />, name: "Instagram", color: "text-pink-400" },
-    { icon: <Youtube className="w-5 h-5" />, name: "YouTube", color: "text-red-400" },
-    { icon: <Music2 className="w-5 h-5" />, name: "TikTok", color: "text-purple-400" },
+    { icon: <Instagram className="w-5 h-5" />, name: "Instagram", color: "text-pink-500", bgColor: "bg-pink-100" },
+    { icon: <Youtube className="w-5 h-5" />, name: "YouTube", color: "text-red-500", bgColor: "bg-red-100" },
+    { icon: <Music2 className="w-5 h-5" />, name: "TikTok", color: "text-purple-500", bgColor: "bg-purple-100" },
   ];
 
   return (
@@ -199,11 +199,19 @@ export default function ExtractorForm() {
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.8 }}
       >
-        <Card className="p-8 bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-sm border-white/20 rounded-2xl shadow-2xl overflow-hidden relative">
+        <Card className="p-8 glass-pastel border-pink-300/30 rounded-3xl shadow-pastel-xl overflow-hidden relative hover-lift">
           {/* Background decoration */}
-          <div className="absolute inset-0 bg-gradient-to-r from-purple-600/10 via-blue-600/10 to-indigo-600/10" />
-          <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-purple-500/20 to-blue-500/20 rounded-full blur-3xl" />
-          <div className="absolute bottom-0 left-0 w-24 h-24 bg-gradient-to-tr from-blue-500/20 to-indigo-500/20 rounded-full blur-2xl" />
+          <div className="absolute inset-0 bg-pastel-warm" />
+          <motion.div 
+            animate={{ x: [0, 100, 0], y: [0, -30, 0] }}
+            transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+            className="absolute top-0 right-0 w-32 h-32 bg-pink-200/30 rounded-full blur-3xl"
+          />
+          <motion.div 
+            animate={{ x: [0, -50, 0], y: [0, 40, 0] }}
+            transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
+            className="absolute bottom-0 left-0 w-24 h-24 bg-purple-200/30 rounded-full blur-2xl"
+          />
           
           <div className="relative z-10">
             {/* Header */}
@@ -215,21 +223,31 @@ export default function ExtractorForm() {
                 className="flex items-center justify-center mb-4"
               >
                 <div className="relative">
-                  <Zap className="w-8 h-8 text-yellow-400" />
                   <motion.div
-                    animate={{ rotate: 360 }}
-                    transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
-                    className="absolute inset-0 border-2 border-yellow-400/30 rounded-full"
+                    animate={{ rotate: [0, 360] }}
+                    transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
+                  >
+                    <Zap className="w-8 h-8 text-yellow-400" />
+                  </motion.div>
+                  <motion.div
+                    animate={{ scale: [1, 1.2, 1] }}
+                    transition={{ duration: 2, repeat: Infinity }}
+                    className="absolute inset-0 border-2 border-yellow-300/40 rounded-full"
                   />
                 </div>
-                <h2 className="text-2xl font-bold text-white ml-3">
-                  Extract Audio Magic
+                <h2 className="text-2xl font-bold text-gray-800 ml-3">
+                  Extract Audio <span className="gradient-text">Magic</span>
                 </h2>
-                <Sparkles className="w-6 h-6 text-purple-400 ml-2" />
+                <motion.div
+                  animate={{ rotate: [0, 20, -20, 0] }}
+                  transition={{ duration: 3, repeat: Infinity }}
+                >
+                  <Sparkles className="w-6 h-6 text-pink-400 ml-2" />
+                </motion.div>
               </motion.div>
               
-              <p className="text-gray-300 text-lg max-w-2xl mx-auto">
-                Paste any social media URL and watch as we extract high-quality audio with AI-powered music recognition
+              <p className="text-gray-700 text-lg max-w-2xl mx-auto">
+                Paste any social media URL and watch as we extract high-quality audio with our gentle AI magic ✨
               </p>
             </div>
 
@@ -240,14 +258,15 @@ export default function ExtractorForm() {
               transition={{ duration: 0.6, delay: 0.4 }}
               className="flex items-center justify-center gap-6 mb-8"
             >
-              <span className="text-sm text-gray-400 font-medium">Supported platforms:</span>
+              <span className="text-sm text-gray-600 font-medium">Supported platforms:</span>
               {platformIcons.map((platform, index) => (
                 <motion.div
                   key={platform.name}
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
                   transition={{ duration: 0.3, delay: 0.6 + index * 0.1 }}
-                  className={`flex items-center space-x-2 ${platform.color}`}
+                  whileHover={{ scale: 1.1 }}
+                  className={`flex items-center space-x-2 px-3 py-2 rounded-full ${platform.bgColor} ${platform.color} shadow-pastel`}
                 >
                   {platform.icon}
                   <span className="text-sm font-medium">{platform.name}</span>
@@ -267,21 +286,26 @@ export default function ExtractorForm() {
                   <div className="flex-1 relative">
                     <Input
                       type="text"
-                      placeholder="Paste your Instagram, YouTube, or TikTok URL here..."
+                      placeholder="Paste your magical URL here... ✨"
                       value={url}
                       onChange={(e) => setUrl(e.target.value)}
-                      className="h-14 bg-white/10 border-white/20 text-white placeholder:text-white/60 focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all duration-300 text-lg rounded-xl pl-6 pr-12"
+                      className="h-14 glass border-pink-300/40 text-gray-800 placeholder:text-gray-600 focus-pastel transition-all duration-300 text-lg rounded-2xl pl-6 pr-12 shadow-pastel"
                       disabled={isLoading}
                     />
                     <div className="absolute right-4 top-1/2 transform -translate-y-1/2">
-                      <Music2 className="w-5 h-5 text-purple-400" />
+                      <motion.div
+                        animate={{ rotate: [0, 10, -10, 0] }}
+                        transition={{ duration: 2, repeat: Infinity }}
+                      >
+                        <Music2 className="w-5 h-5 text-pink-400" />
+                      </motion.div>
                     </div>
                   </div>
                   
                   <Button 
                     type="submit" 
                     disabled={isLoading || !url.trim()}
-                    className="h-14 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-semibold px-8 rounded-xl transition-all duration-300 shadow-lg hover:shadow-purple-500/25 relative overflow-hidden group lg:min-w-[200px]"
+                    className="h-14 bg-gradient-to-r from-pink-300 to-purple-300 hover:from-pink-400 hover:to-purple-400 text-gray-800 font-semibold px-8 rounded-2xl transition-all duration-300 shadow-pastel-lg hover:shadow-pastel-xl relative overflow-hidden group lg:min-w-[200px] btn-shimmer"
                   >
                     <span className="relative z-10 flex items-center">
                       {isLoading ? (
@@ -289,23 +313,22 @@ export default function ExtractorForm() {
                           <motion.div
                             animate={{ rotate: 360 }}
                             transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                            className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full mr-3"
+                            className="w-5 h-5 border-2 border-gray-700/30 border-t-gray-700 rounded-full mr-3"
                           />
-                          Processing...
+                          Processing Magic...
                         </>
                       ) : (
                         <>
                           Extract Audio
-                          <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
+                          <motion.div
+                            whileHover={{ x: 5 }}
+                            transition={{ duration: 0.2 }}
+                          >
+                            <ArrowRight className="w-5 h-5 ml-2" />
+                          </motion.div>
                         </>
                       )}
                     </span>
-                    <motion.div
-                      className="absolute inset-0 bg-gradient-to-r from-purple-700 to-blue-700"
-                      initial={{ x: "-100%" }}
-                      whileHover={{ x: 0 }}
-                      transition={{ duration: 0.3 }}
-                    />
                   </Button>
                 </div>
               </motion.div>
@@ -315,16 +338,39 @@ export default function ExtractorForm() {
                 initial={{ y: 20, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ duration: 0.6, delay: 0.8 }}
-                className="bg-gradient-to-r from-blue-500/10 to-purple-500/10 border border-blue-500/20 rounded-xl p-4"
+                className="bg-pastel-cool border border-blue-300/30 rounded-2xl p-4 shadow-pastel"
               >
                 <div className="flex items-start space-x-3">
-                  <Sparkles className="w-5 h-5 text-blue-400 mt-0.5 flex-shrink-0" />
+                  <motion.div
+                    animate={{ scale: [1, 1.1, 1] }}
+                    transition={{ duration: 2, repeat: Infinity }}
+                  >
+                    <Sparkles className="w-5 h-5 text-blue-400 mt-0.5 flex-shrink-0" />
+                  </motion.div>
                   <div>
-                    <h4 className="text-white font-medium mb-1">Pro Tips:</h4>
-                    <ul className="text-sm text-gray-300 space-y-1">
-                      <li>• Works with public posts, reels, and videos</li>
-                      <li>• Automatically identifies music and creates Spotify playlists</li>
-                      <li>• High-quality audio extraction with metadata</li>
+                    <h4 className="text-gray-800 font-medium mb-1 flex items-center">
+                      Pro Tips 
+                      <motion.div
+                        animate={{ rotate: [0, 20, -20, 0] }}
+                        transition={{ duration: 3, repeat: Infinity }}
+                        className="ml-2"
+                      >
+                        <Star className="w-4 h-4 text-yellow-400" />
+                      </motion.div>
+                    </h4>
+                    <ul className="text-sm text-gray-700 space-y-1">
+                      <li className="flex items-center">
+                        <Heart className="w-3 h-3 text-pink-400 mr-2" />
+                        Works with public posts, reels, and videos
+                      </li>
+                      <li className="flex items-center">
+                        <Heart className="w-3 h-3 text-purple-400 mr-2" />
+                        Automatically identifies music and creates Spotify playlists
+                      </li>
+                      <li className="flex items-center">
+                        <Heart className="w-3 h-3 text-blue-400 mr-2" />
+                        High-quality audio extraction with beautiful metadata
+                      </li>
                     </ul>
                   </div>
                 </div>
@@ -352,7 +398,12 @@ export default function ExtractorForm() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
         >
-          <ErrorAlert message={error} />
+          <ErrorAlert message={error} onRetry={() => {
+            setError(null);
+            if (url.trim()) {
+              handleSubmit(new Event('submit') as any);
+            }
+          }} />
         </motion.div>
       )}
 

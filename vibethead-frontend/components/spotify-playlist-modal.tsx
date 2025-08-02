@@ -1,13 +1,14 @@
 "use client";
 
 import { useState } from 'react';
+import { motion } from 'framer-motion';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Loader2, Music, CheckCircle, ExternalLink, Copy, Sparkles } from 'lucide-react';
+import { Loader2, Music, CheckCircle, ExternalLink, Copy, Sparkles, Heart, Star } from 'lucide-react';
 import { AudioResult } from '@/lib/types';
 import { generateSpotifyAuthUrl, exchangeSpotifyCode, createSpotifyPlaylist } from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
@@ -30,8 +31,8 @@ export const SpotifyPlaylistModal = ({ isOpen, onClose, selectedTracks }: Spotif
   const handleCreatePlaylist = async () => {
     if (!playlistName.trim()) {
       toast({
-        title: "Error",
-        description: "Please enter a playlist name",
+        title: "Oops! 🌸",
+        description: "Please enter a magical playlist name",
         variant: "destructive",
       });
       return;
@@ -39,8 +40,8 @@ export const SpotifyPlaylistModal = ({ isOpen, onClose, selectedTracks }: Spotif
 
     if (selectedTracks.length === 0) {
       toast({
-        title: "Error",
-        description: "No tracks selected",
+        title: "No tracks selected ✨",
+        description: "Please select some beautiful tracks first",
         variant: "destructive",
       });
       return;
@@ -115,7 +116,7 @@ export const SpotifyPlaylistModal = ({ isOpen, onClose, selectedTracks }: Spotif
           } catch (error) {
             console.error('Error creating playlist:', error);
             toast({
-              title: "Error",
+              title: "Error 💔",
               description: error instanceof Error ? error.message : 'Failed to create playlist',
               variant: "destructive",
             });
@@ -126,8 +127,8 @@ export const SpotifyPlaylistModal = ({ isOpen, onClose, selectedTracks }: Spotif
           authWindow.close();
           window.removeEventListener('message', handleAuthMessage);
           toast({
-            title: "Error",
-            description: "Spotify authorization failed",
+            title: "Authorization failed 😢",
+            description: "Spotify authorization was not successful",
             variant: "destructive",
           });
           setIsLoading(false);
@@ -150,7 +151,7 @@ export const SpotifyPlaylistModal = ({ isOpen, onClose, selectedTracks }: Spotif
     } catch (error) {
       console.error('Error starting Spotify auth:', error);
       toast({
-        title: "Error",
+        title: "Error starting auth 🌸",
         description: error instanceof Error ? error.message : 'Failed to start Spotify authorization',
         variant: "destructive",
       });
@@ -179,12 +180,12 @@ export const SpotifyPlaylistModal = ({ isOpen, onClose, selectedTracks }: Spotif
     try {
       await navigator.clipboard.writeText(text);
       toast({
-        title: "Copied!",
-        description: "Playlist URL copied to clipboard",
+        title: "Copied! ✨",
+        description: "Playlist URL copied to clipboard with love",
       });
     } catch (err) {
       toast({
-        title: "Error",
+        title: "Copy failed 💔",
         description: "Failed to copy to clipboard",
         variant: "destructive",
       });
@@ -195,159 +196,268 @@ export const SpotifyPlaylistModal = ({ isOpen, onClose, selectedTracks }: Spotif
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-md bg-gradient-to-br from-gray-900 to-gray-800 border-gray-700 shadow-2xl">
+      <DialogContent className="sm:max-w-md glass-pastel border-pink-300/30 shadow-pastel-xl rounded-3xl">
         <DialogHeader>
-          <DialogTitle className="flex items-center text-white">
+          <DialogTitle className="flex items-center text-gray-800">
             {authStep === 'success' ? (
               <>
-                <CheckCircle className="w-5 h-5 mr-2 text-green-400" />
-                Playlist Created Successfully!
+                <motion.div
+                  animate={{ scale: [1, 1.2, 1] }}
+                  transition={{ duration: 1, repeat: Infinity }}
+                >
+                  <CheckCircle className="w-5 h-5 mr-2 text-green-500" />
+                </motion.div>
+                Playlist Created Successfully! 🎉
               </>
             ) : (
               <>
-                <Music className="w-5 h-5 mr-2" />
-                Create Spotify Playlist
+                <Music className="w-5 h-5 mr-2 text-pink-500" />
+                Create Magical Spotify Playlist
+                <motion.div
+                  animate={{ rotate: [0, 20, -20, 0] }}
+                  transition={{ duration: 3, repeat: Infinity }}
+                  className="ml-2"
+                >
+                  <Sparkles className="w-4 h-4 text-purple-400" />
+                </motion.div>
               </>
             )}
           </DialogTitle>
         </DialogHeader>
 
         {authStep === 'form' && (
-          <div className="space-y-4">
-            <div className="text-sm text-gray-300 bg-purple-500/10 p-3 rounded-lg border border-purple-500/20">
-              <Sparkles className="w-4 h-4 inline mr-2 text-purple-400" />
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="space-y-4"
+          >
+            <div className="text-sm text-gray-700 bg-pastel-cool p-3 rounded-xl border border-purple-300/30 flex items-center">
+              <motion.div
+                animate={{ rotate: [0, 360] }}
+                transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+                className="mr-2"
+              >
+                <Sparkles className="w-4 h-4 text-purple-400" />
+              </motion.div>
               {tracksWithSpotify.length} of {selectedTracks.length} selected tracks have Spotify IDs
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="playlist-name" className="text-white">
-                Playlist Name *
+              <Label htmlFor="playlist-name" className="text-gray-800 font-medium">
+                Playlist Name ✨
               </Label>
               <Input
                 id="playlist-name"
                 value={playlistName}
                 onChange={(e) => setPlaylistName(e.target.value)}
-                placeholder="My VibeThread Playlist"
-                className="bg-gray-800/50 border-gray-600 text-white placeholder:text-gray-400 focus:ring-purple-500 focus:border-purple-500"
+                placeholder="My Magical VibeThread Playlist"
+                className="glass border-pink-300/40 text-gray-800 placeholder:text-gray-600 focus-pastel rounded-xl"
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="playlist-description" className="text-white">
-                Description (optional)
+              <Label htmlFor="playlist-description" className="text-gray-800 font-medium">
+                Description (optional) 💖
               </Label>
               <Textarea
                 id="playlist-description"
                 value={playlistDescription}
                 onChange={(e) => setPlaylistDescription(e.target.value)}
-                placeholder="Playlist created with VibeThread"
-                className="bg-gray-800/50 border-gray-600 text-white placeholder:text-gray-400 resize-none focus:ring-purple-500 focus:border-purple-500"
+                placeholder="Playlist created with love using VibeThread ✨"
+                className="glass border-purple-300/40 text-gray-800 placeholder:text-gray-600 resize-none focus-pastel-lavender rounded-xl"
                 rows={3}
               />
             </div>
 
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-2 p-3 glass rounded-xl border border-blue-300/30">
               <Checkbox
                 id="is-public"
                 checked={isPublic}
                 onCheckedChange={(checked) => setIsPublic(checked as boolean)}
-                className="border-gray-500 data-[state=checked]:bg-purple-600 data-[state=checked]:border-purple-600"
+                className="border-blue-400 data-[state=checked]:bg-blue-400 data-[state=checked]:border-blue-400"
               />
-              <Label htmlFor="is-public" className="text-white cursor-pointer">
+              <Label htmlFor="is-public" className="text-gray-800 cursor-pointer font-medium flex items-center">
                 Make playlist public
+                <Heart className="w-4 h-4 ml-2 text-pink-400" />
               </Label>
             </div>
 
-            <div className="bg-gray-800/30 p-4 rounded-lg border border-gray-700">
-              <h4 className="text-sm font-medium text-white mb-3 flex items-center">
-                <Music className="w-4 h-4 mr-2 text-purple-400" />
+            <div className="bg-pastel-warm p-4 rounded-xl border border-pink-300/30">
+              <h4 className="text-sm font-medium text-gray-800 mb-3 flex items-center">
+                <Music className="w-4 h-4 mr-2 text-pink-500" />
                 Selected Tracks:
+                <motion.div
+                  animate={{ scale: [1, 1.1, 1] }}
+                  transition={{ duration: 2, repeat: Infinity }}
+                  className="ml-2"
+                >
+                  <Star className="w-4 h-4 text-yellow-400" />
+                </motion.div>
               </h4>
               <div className="space-y-2 max-h-32 overflow-y-auto">
                 {tracksWithSpotify.map((track, index) => (
-                  <div key={track.id} className="text-xs text-gray-300 flex items-center">
-                    <span className="w-6 h-6 bg-purple-600/20 rounded-full flex items-center justify-center text-purple-400 mr-2 text-xs">
+                  <motion.div 
+                    key={track.id} 
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.3, delay: index * 0.1 }}
+                    className="text-xs text-gray-700 flex items-center p-2 bg-white/50 rounded-lg"
+                  >
+                    <span className="w-6 h-6 bg-pink-200 rounded-full flex items-center justify-center text-pink-700 mr-2 text-xs font-medium">
                       {index + 1}
                     </span>
                     <span className="flex-1">
                       {track.title} - {track.artists}
                     </span>
-                  </div>
+                    <Heart className="w-3 h-3 text-pink-400" />
+                  </motion.div>
                 ))}
               </div>
             </div>
-          </div>
+          </motion.div>
         )}
 
         {authStep === 'auth' && (
-          <div className="text-center py-8">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.5 }}
+            className="text-center py-8"
+          >
             <div className="relative mb-6">
-              <div className="w-16 h-16 mx-auto bg-gradient-to-r from-green-500 to-green-600 rounded-full flex items-center justify-center">
-                <Loader2 className="w-8 h-8 animate-spin text-white" />
+              <div className="w-16 h-16 mx-auto bg-gradient-to-r from-green-300 to-emerald-300 rounded-full flex items-center justify-center shadow-pastel-lg">
+                <motion.div
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                >
+                  <Loader2 className="w-8 h-8 text-white" />
+                </motion.div>
               </div>
-              <div className="absolute inset-0 w-16 h-16 mx-auto border-4 border-green-400/30 rounded-full animate-pulse" />
+              <motion.div
+                animate={{ scale: [1, 1.2, 1] }}
+                transition={{ duration: 2, repeat: Infinity }}
+                className="absolute inset-0 w-16 h-16 mx-auto border-4 border-green-300/40 rounded-full"
+              />
             </div>
-            <p className="text-white font-medium mb-2">Authorizing with Spotify...</p>
-            <p className="text-sm text-gray-400">
-              A new window should have opened. If not, please allow popups and try again.
+            <h3 className="text-lg font-bold text-gray-800 mb-2 flex items-center justify-center">
+              Authorizing with Spotify
+              <motion.div
+                animate={{ rotate: [0, 360] }}
+                transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+                className="ml-2"
+              >
+                <Sparkles className="w-5 h-5 text-green-400" />
+              </motion.div>
+            </h3>
+            <p className="text-sm text-gray-700">
+              A magical window should have opened. If not, please allow popups and try again! ✨
             </p>
-          </div>
+          </motion.div>
         )}
 
         {authStep === 'creating' && (
-          <div className="text-center py-8">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.5 }}
+            className="text-center py-8"
+          >
             <div className="relative mb-6">
-              <div className="w-16 h-16 mx-auto bg-gradient-to-r from-purple-500 to-blue-600 rounded-full flex items-center justify-center">
-                <Loader2 className="w-8 h-8 animate-spin text-white" />
+              <div className="w-16 h-16 mx-auto bg-gradient-to-r from-purple-300 to-pink-300 rounded-full flex items-center justify-center shadow-pastel-lg">
+                <motion.div
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                >
+                  <Loader2 className="w-8 h-8 text-white" />
+                </motion.div>
               </div>
-              <div className="absolute inset-0 w-16 h-16 mx-auto border-4 border-purple-400/30 rounded-full animate-pulse" />
+              <motion.div
+                animate={{ scale: [1, 1.2, 1] }}
+                transition={{ duration: 2, repeat: Infinity }}
+                className="absolute inset-0 w-16 h-16 mx-auto border-4 border-purple-300/40 rounded-full"
+              />
             </div>
-            <p className="text-white font-medium mb-2">Creating your Spotify playlist...</p>
-            <p className="text-sm text-gray-400">This will only take a moment</p>
-          </div>
+            <h3 className="text-lg font-bold text-gray-800 mb-2 flex items-center justify-center">
+              Creating your magical playlist
+              <motion.div
+                animate={{ rotate: [0, 20, -20, 0] }}
+                transition={{ duration: 3, repeat: Infinity }}
+                className="ml-2"
+              >
+                <Heart className="w-5 h-5 text-pink-400" />
+              </motion.div>
+            </h3>
+            <p className="text-sm text-gray-700">This will only take a moment... ✨</p>
+          </motion.div>
         )}
 
         {authStep === 'success' && createdPlaylist && (
-          <div className="text-center py-6">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.5 }}
+            className="text-center py-6"
+          >
             <div className="relative mb-6">
-              <div className="w-20 h-20 mx-auto bg-gradient-to-r from-green-500 to-emerald-600 rounded-full flex items-center justify-center">
+              <motion.div
+                animate={{ scale: [1, 1.1, 1] }}
+                transition={{ duration: 2, repeat: Infinity }}
+                className="w-20 h-20 mx-auto bg-gradient-to-r from-green-300 to-emerald-300 rounded-full flex items-center justify-center shadow-pastel-lg"
+              >
                 <CheckCircle className="w-10 h-10 text-white" />
-              </div>
-              <div className="absolute inset-0 w-20 h-20 mx-auto border-4 border-green-400/30 rounded-full animate-pulse" />
+              </motion.div>
+              <motion.div
+                animate={{ rotate: [0, 360] }}
+                transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
+                className="absolute inset-0 w-20 h-20 mx-auto border-4 border-green-300/40 rounded-full"
+              />
             </div>
             
-            <h3 className="text-xl font-bold text-white mb-2">
-              🎉 Playlist Created!
+            <h3 className="text-xl font-bold text-gray-800 mb-2 flex items-center justify-center">
+              🎉 Playlist Created with Love! 
+              <motion.div
+                animate={{ scale: [1, 1.2, 1] }}
+                transition={{ duration: 1, repeat: Infinity }}
+                className="ml-2"
+              >
+                <Heart className="w-5 h-5 text-pink-400" />
+              </motion.div>
             </h3>
             
-            <div className="bg-green-500/10 border border-green-500/20 rounded-lg p-4 mb-6">
-              <p className="text-green-400 font-medium mb-1">
+            <div className="bg-pastel-cool border border-green-300/30 rounded-xl p-4 mb-6">
+              <p className="text-green-700 font-medium mb-1 flex items-center justify-center">
+                <Star className="w-4 h-4 mr-2 text-yellow-400" />
                 "{createdPlaylist.name}"
               </p>
-              <p className="text-sm text-gray-300">
-                {createdPlaylist.tracksAdded} tracks added successfully
+              <p className="text-sm text-gray-700">
+                {createdPlaylist.tracksAdded} magical tracks added successfully ✨
               </p>
             </div>
 
             <div className="space-y-3">
-              <Button
-                onClick={() => window.open(createdPlaylist.url, '_blank')}
-                className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-medium py-3 rounded-lg transition-all duration-300 shadow-lg hover:shadow-green-500/25"
-              >
-                <ExternalLink className="w-4 h-4 mr-2" />
-                Open in Spotify
-              </Button>
+              <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                <Button
+                  onClick={() => window.open(createdPlaylist.url, '_blank')}
+                  className="w-full bg-gradient-to-r from-green-300 to-emerald-300 hover:from-green-400 hover:to-emerald-400 text-gray-800 font-medium py-3 rounded-xl transition-all duration-300 shadow-pastel-lg hover:shadow-pastel-xl btn-shimmer"
+                >
+                  <ExternalLink className="w-4 h-4 mr-2" />
+                  Open in Spotify
+                </Button>
+              </motion.div>
               
-              <Button
-                variant="outline"
-                onClick={() => copyToClipboard(createdPlaylist.url)}
-                className="w-full border-gray-600 text-gray-300 hover:bg-gray-800 hover:text-white py-3 rounded-lg transition-all duration-300"
-              >
-                <Copy className="w-4 h-4 mr-2" />
-                Copy Playlist URL
-              </Button>
+              <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                <Button
+                  variant="outline"
+                  onClick={() => copyToClipboard(createdPlaylist.url)}
+                  className="w-full border-pink-300 text-pink-700 hover:bg-pink-100 hover:text-pink-800 py-3 rounded-xl transition-all duration-300"
+                >
+                  <Copy className="w-4 h-4 mr-2" />
+                  Copy Playlist URL
+                </Button>
+              </motion.div>
             </div>
-          </div>
+          </motion.div>
         )}
 
         <DialogFooter>
@@ -357,34 +467,45 @@ export const SpotifyPlaylistModal = ({ isOpen, onClose, selectedTracks }: Spotif
                 variant="outline"
                 onClick={handleClose}
                 disabled={isLoading}
-                className="border-gray-600 text-gray-300 hover:bg-gray-800"
+                className="border-gray-400 text-gray-700 hover:bg-gray-100 rounded-xl"
               >
                 Cancel
               </Button>
               <Button
                 onClick={handleCreatePlaylist}
                 disabled={isLoading || !playlistName.trim() || tracksWithSpotify.length === 0}
-                className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white"
+                className="bg-gradient-to-r from-green-300 to-emerald-300 hover:from-green-400 hover:to-emerald-400 text-gray-800 rounded-xl btn-shimmer"
               >
                 {isLoading ? (
                   <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Creating...
+                    <motion.div
+                      animate={{ rotate: 360 }}
+                      transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                      className="w-4 h-4 mr-2"
+                    >
+                      <Loader2 className="w-4 h-4" />
+                    </motion.div>
+                    Creating Magic...
                   </>
                 ) : (
-                  'Create Playlist'
+                  <>
+                    Create Playlist
+                    <Sparkles className="w-4 h-4 ml-2" />
+                  </>
                 )}
               </Button>
             </>
           )}
           
           {authStep === 'success' && (
-            <Button
-              onClick={handleClose}
-              className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white"
-            >
-              Done
-            </Button>
+            <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} className="w-full">
+              <Button
+                onClick={handleClose}
+                className="w-full bg-gradient-to-r from-pink-300 to-purple-300 hover:from-pink-400 hover:to-purple-400 text-gray-800 rounded-xl btn-shimmer"
+              >
+                Done ✨
+              </Button>
+            </motion.div>
           )}
         </DialogFooter>
       </DialogContent>
