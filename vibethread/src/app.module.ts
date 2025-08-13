@@ -1,10 +1,12 @@
-import { Module } from '@nestjs/common';
+import { Module, MiddlewareConsumer } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AudioModule } from './audio/audio.module';
+import { MonitoringModule } from './monitoring/monitoring.module';
+import { MonitoringMiddleware } from './monitoring/monitoring.middleware';
 
 @Module({
   imports: [
@@ -16,7 +18,8 @@ import { AudioModule } from './audio/audio.module';
       ttl: 60000, // 1 minute
       limit: 10, // 10 requests per minute
     }]),
-    AudioModule
+    AudioModule,
+    MonitoringModule
   ],
   controllers: [AppController],
   providers: [
@@ -27,4 +30,10 @@ import { AudioModule } from './audio/audio.module';
     },
   ],
 })
-export class AppModule {}
+export class AppModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer
+      .apply(MonitoringMiddleware)
+      .forRoutes('*');
+  }
+}

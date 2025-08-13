@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { exec } from 'child_process';
 import * as path from 'path';
 import * as fs from 'fs';
+import * as os from 'os';
 var url = require('url');
 var crypto = require('crypto');
 const axios = require('axios');
@@ -27,7 +28,7 @@ export class AudioService {
     
     this.spotifyClientId = clientId;
     this.spotifyClientSecret = clientSecret;
-    this.redirectUri = this.configService.get<string>('SPOTIFY_REDIRECT_URI') || 'http://localhost:3001/spotify-callback';
+    this.redirectUri = this.configService.get<string>('SPOTIFY_REDIRECT_URI') || 'https://vibethread.praneethd.xyz/spotify-callback';
     
     // Debug logging to verify environment variables are loaded
     console.log('Spotify Client ID loaded:', this.spotifyClientId ? 'Yes' : 'No');
@@ -35,22 +36,51 @@ export class AudioService {
     console.log('Spotify Redirect URI:', this.redirectUri);
   }
 
+  private getWritableDirectory(): string {
+    const possibleDirs = [
+      path.join(process.cwd(), 'public', 'audio', 'downloads'),
+      path.join('/tmp', 'vibethread_audio'),
+      path.join(os.tmpdir(), 'vibethread_audio'),
+      path.join(process.cwd(), 'temp_audio')
+    ];
+
+    for (const dir of possibleDirs) {
+      try {
+        // Ensure directory exists
+        if (!fs.existsSync(dir)) {
+          fs.mkdirSync(dir, { recursive: true, mode: 0o777 });
+        }
+        
+        // Set permissions
+        fs.chmodSync(dir, 0o777);
+        
+        // Test write permissions
+        const testFile = path.join(dir, `test_${Date.now()}_${Math.random()}.tmp`);
+        fs.writeFileSync(testFile, 'test');
+        fs.unlinkSync(testFile);
+        
+        console.log(`Using writable directory: ${dir}`);
+        return dir;
+      } catch (err) {
+        console.log(`Directory ${dir} not writable: ${err.message}`);
+        continue;
+      }
+    }
+    
+    throw new Error('No writable directory found for audio downloads');
+  }
+
   async downloadInstagramAudioAsMP3(
     url: string,
-    outputDir = './public/audio/downloads',
+    outputDir?: string,
   ) {
     console.log('Downloading audio from URL:', url);
 
-    // Ensure the output directory exists
-    try {
-      if (!fs.existsSync(outputDir)) {
-        fs.mkdirSync(outputDir, { recursive: true });
-      }
-    } catch (err) {
-      console.error('Error creating directory:', err);
-    }
+    // Get a writable directory
+    const finalOutputDir = outputDir || this.getWritableDirectory();
+    console.log(`Using output directory: ${finalOutputDir}`);
 
-    const outputTemplate = path.join(outputDir, 'audio_%(id)s.%(ext)s');
+    const outputTemplate = path.join(finalOutputDir, 'audio_%(id)s.%(ext)s');
 
     // Create a Promise to handle the async exec operation
     return new Promise((resolve, reject) => {
@@ -66,10 +96,12 @@ export class AudioService {
           return;
         }
 
-        const command = `yt-dlp --cookies src/audio/cookies.txt -x --audio-format mp3 -o "${outputTemplate}" "${url}"`;
+        // Use absolute path for cookies file
+        const cookiesPath = path.join(process.cwd(), 'src', 'audio', 'cookies.txt');
+        const command = `yt-dlp --cookies "${cookiesPath}" -x --audio-format mp3 -o "${outputTemplate}" "${url}"`;
         console.log(`Running command: ${command}`);
 
-        exec(command, (error, stdout, stderr) => {
+        exec(command, { timeout: 300000 }, (error, stdout, stderr) => {
           if (error) {
             console.error('Error downloading audio:', error.message);
             reject(error);
@@ -84,12 +116,12 @@ export class AudioService {
 
           // Find the downloaded file(s)
           try {
-            const files = fs.readdirSync(outputDir);
+            const files = fs.readdirSync(finalOutputDir);
             const mp3Files = files.filter((file) => file.endsWith('.mp3'));
 
             if (mp3Files.length > 0) {
               const filePaths = mp3Files.map((file) =>
-                path.join(outputDir, file),
+                path.join(finalOutputDir, file),
               );
 
               // Process each file with identify function
@@ -99,8 +131,8 @@ export class AudioService {
                 signature_version: '1',
                 data_type: 'audio',
                 secure: true,
-                access_key: 'bd254743a2ef0cb4252dd406d2207507',
-                access_secret: '59a0v1yGoBJvdca6L6YGOxiX2WEFjtRxBwNsr9Vl',
+                access_key: this.configService.get<string>('ACR_ACCESS_KEY'),
+                access_secret: this.configService.get<string>('ACR_ACCESS_SECRET'),
               };
 
               // Array to store music identification results
@@ -221,8 +253,8 @@ export class AudioService {
       signature_version: '1',
       data_type: 'audio',
       secure: true,
-      access_key: 'bd254743a2ef0cb4252dd406d2207507',
-      access_secret: '59a0v1yGoBJvdca6L6YGOxiX2WEFjtRxBwNsr9Vl',
+      access_key: this.configService.get<string>('ACR_ACCESS_KEY'),
+      access_secret: this.configService.get<string>('ACR_ACCESS_SECRET'),
     };
   }
 

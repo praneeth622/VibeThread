@@ -79,7 +79,7 @@ npm run start:dev
 npm run start:prod
 ```
 
-The application will be available at `http://localhost:3000` (or the port specified in your .env file).
+The application will be available at `https://vibethread-backend.praneethd.xyz` (or the port specified in your .env file).
 
 ## API Endpoints
 

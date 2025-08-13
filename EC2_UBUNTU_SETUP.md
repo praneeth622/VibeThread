@@ -113,7 +113,7 @@ npm run build
 npm run start:prod &
 
 # Test API endpoint
-curl http://localhost:3000/api/audio/health
+curl https://vibethread-backend.praneethd.xyz/api/audio/health
 
 # Stop the test
 pkill -f "node dist/main"
@@ -351,10 +351,10 @@ Your VibeThread backend should now be running successfully on EC2 Ubuntu!
 
 ```bash
 # Test health endpoint
-curl http://your-ec2-ip:3000/api/audio/health
+curl https://vibethread-backend.praneethd.xyz/api/audio/health
 
 # Test with a sample Instagram URL
-curl -X POST http://your-ec2-ip:3000/api/audio/extract-audio \
+curl -X POST https://vibethread-backend.praneethd.xyz/api/audio/extract-audio \
   -H "Content-Type: application/json" \
   -d '{"url": "https://www.instagram.com/reel/sample-url/"}'
 ```

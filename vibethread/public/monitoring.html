@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VibeThread Backend Monitoring</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+        
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+        
+        .dashboard {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .card h3 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 1.3rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+        
+        .status-healthy {
+            background-color: #4CAF50;
+            box-shadow: 0 0 10px rgba(76, 175, 80, 0.5);
+        }
+        
+        .status-unhealthy {
+            background-color: #f44336;
+            box-shadow: 0 0 10px rgba(244, 67, 54, 0.5);
+        }
+        
+        .metric {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .metric:last-child {
+            border-bottom: none;
+        }
+        
+        .metric-label {
+            color: #666;
+            font-weight: 500;
+        }
+        
+        .metric-value {
+            color: #333;
+            font-weight: bold;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background-color: #e0e0e0;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 5px;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4CAF50, #8BC34A);
+            transition: width 0.3s ease;
+        }
+        
+        .refresh-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 500;
+            transition: transform 0.2s ease;
+            margin: 10px 5px;
+        }
+        
+        .refresh-btn:hover {
+            transform: translateY(-2px);
+        }
+        
+        .timestamp {
+            text-align: center;
+            color: rgba(255, 255, 255, 0.8);
+            margin-top: 20px;
+            font-size: 0.9rem;
+        }
+        
+        .loading {
+            text-align: center;
+            color: #666;
+            font-style: italic;
+        }
+        
+        .error {
+            color: #f44336;
+            text-align: center;
+            padding: 20px;
+            background: rgba(244, 67, 54, 0.1);
+            border-radius: 10px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎵 VibeThread Backend</h1>
+            <p>Real-time System Monitoring Dashboard</p>
+        </div>
+        
+        <div class="dashboard">
+            <!-- Health Status Card -->
+            <div class="card">
+                <h3>
+                    <span id="health-indicator" class="status-indicator"></span>
+                    System Health
+                </h3>
+                <div id="health-content" class="loading">Loading...</div>
+            </div>
+            
+            <!-- System Metrics Card -->
+            <div class="card">
+                <h3>📊 System Metrics</h3>
+                <div id="metrics-content" class="loading">Loading...</div>
+            </div>
+            
+            <!-- Application Stats Card -->
+            <div class="card">
+                <h3>📈 Application Stats</h3>
+                <div id="stats-content" class="loading">Loading...</div>
+            </div>
+        </div>
+        
+        <div style="text-align: center;">
+            <button class="refresh-btn" onclick="refreshAll()">🔄 Refresh All</button>
+            <button class="refresh-btn" onclick="toggleAutoRefresh()">⏱️ Auto Refresh: <span id="auto-status">OFF</span></button>
+        </div>
+        
+        <div class="timestamp" id="last-updated">
+            Last updated: Never
+        </div>
+    </div>
+
+    <script>
+        let autoRefreshInterval = null;
+        let isAutoRefresh = false;
+        
+        const API_BASE = window.location.origin;
+        
+        async function fetchData(endpoint) {
+            try {
+                const response = await fetch(`${API_BASE}/api/monitoring/${endpoint}`);
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                return await response.json();
+            } catch (error) {
+                console.error(`Error fetching ${endpoint}:`, error);
+                throw error;
+            }
+        }
+        
+        function formatBytes(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+        
+        function formatUptime(seconds) {
+            const days = Math.floor(seconds / 86400);
+            const hours = Math.floor((seconds % 86400) / 3600);
+            const minutes = Math.floor((seconds % 3600) / 60);
+            const secs = seconds % 60;
+            
+            if (days > 0) return `${days}d ${hours}h ${minutes}m`;
+            if (hours > 0) return `${hours}h ${minutes}m ${secs}s`;
+            if (minutes > 0) return `${minutes}m ${secs}s`;
+            return `${secs}s`;
+        }
+        
+        async function loadHealth() {
+            try {
+                const health = await fetchData('health');
+                const indicator = document.getElementById('health-indicator');
+                const content = document.getElementById('health-content');
+                
+                indicator.className = `status-indicator ${health.status === 'healthy' ? 'status-healthy' : 'status-unhealthy'}`;
+                
+                content.innerHTML = `
+                    <div class="metric">
+                        <span class="metric-label">Status</span>
+                        <span class="metric-value">${health.status.toUpperCase()}</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">Environment</span>
+                        <span class="metric-value">${health.environment}</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">Version</span>
+                        <span class="metric-value">${health.version}</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">FFmpeg</span>
+                        <span class="metric-value">${health.services.ffmpeg}</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">yt-dlp</span>
+                        <span class="metric-value">${health.services.ytdlp}</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">ACRCloud</span>
+                        <span class="metric-value">${health.services.acrcloud}</span>
+                    </div>
+                `;
+            } catch (error) {
+                document.getElementById('health-content').innerHTML = `<div class="error">Error loading health data: ${error.message}</div>`;
+            }
+        }
+        
+        async function loadMetrics() {
+            try {
+                const metrics = await fetchData('metrics');
+                const content = document.getElementById('metrics-content');
+                
+                content.innerHTML = `
+                    <div class="metric">
+                        <span class="metric-label">Memory Usage</span>
+                        <span class="metric-value">${metrics.memory.usedPercentage}%</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: ${metrics.memory.usedPercentage}%"></div>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">Memory Used</span>
+                        <span class="metric-value">${formatBytes(metrics.memory.used)} / ${formatBytes(metrics.memory.total)}</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">Disk Usage</span>
+                        <span class="metric-value">${metrics.disk.usedPercentage}%</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: ${metrics.disk.usedPercentage}%"></div>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">CPU Load (1m)</span>
+                        <span class="metric-value">${metrics.cpu.loadAverage[0].toFixed(2)}</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">Process Uptime</span>
+                        <span class="metric-value">${formatUptime(metrics.process.uptime)}</span>
+                    </div>
+                `;
+            } catch (error) {
+                document.getElementById('metrics-content').innerHTML = `<div class="error">Error loading metrics: ${error.message}</div>`;
+            }
+        }
+        
+        async function loadStats() {
+            try {
+                const stats = await fetchData('stats');
+                const content = document.getElementById('stats-content');
+                
+                content.innerHTML = `
+                    <div class="metric">
+                        <span class="metric-label">Total Requests</span>
+                        <span class="metric-value">${stats.requestCount}</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">Error Count</span>
+                        <span class="metric-value">${stats.errorCount}</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">Error Rate</span>
+                        <span class="metric-value">${stats.errorRate.toFixed(2)}%</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">Uptime</span>
+                        <span class="metric-value">${formatUptime(stats.uptime)}</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">Node Version</span>
+                        <span class="metric-value">${stats.nodeVersion}</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-label">Platform</span>
+                        <span class="metric-value">${stats.platform} (${stats.architecture})</span>
+                    </div>
+                `;
+            } catch (error) {
+                document.getElementById('stats-content').innerHTML = `<div class="error">Error loading stats: ${error.message}</div>`;
+            }
+        }
+        
+        async function refreshAll() {
+            document.getElementById('last-updated').textContent = 'Last updated: Refreshing...';
+            
+            await Promise.all([
+                loadHealth(),
+                loadMetrics(),
+                loadStats()
+            ]);
+            
+            document.getElementById('last-updated').textContent = `Last updated: ${new Date().toLocaleString()}`;
+        }
+        
+        function toggleAutoRefresh() {
+            const statusSpan = document.getElementById('auto-status');
+            
+            if (isAutoRefresh) {
+                clearInterval(autoRefreshInterval);
+                isAutoRefresh = false;
+                statusSpan.textContent = 'OFF';
+            } else {
+                autoRefreshInterval = setInterval(refreshAll, 30000); // Refresh every 30 seconds
+                isAutoRefresh = true;
+                statusSpan.textContent = 'ON';
+            }
+        }
+        
+        // Initial load
+        refreshAll();
+    </script>
+</body>
+</html>

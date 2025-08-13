@@ -162,7 +162,7 @@ export const ErrorAlert = ({ message, onRetry }: ErrorAlertProps) => {
                 variant="ghost"
                 size="sm"
                 className="text-red-500 hover:text-red-700 hover:bg-red-100/50 rounded-xl"
-                onClick={() => window.open('https://vibethread.com/support', '_blank')}
+                onClick={() => window.open('https://vibethread.praneethd.xyz/support', '_blank')}
               >
                 Visit Support Center
                 <ExternalLink className="w-3 h-3 ml-1" />

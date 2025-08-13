@@ -1,11 +1,13 @@
-import { Controller, Get, Post, Body, Res, Options, HttpCode, Query } from '@nestjs/common';
+import { Controller, Get, Post, Body, Res, Req, Options, HttpCode, Query, Logger } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBody } from '@nestjs/swagger';
-import { Response } from 'express';
+import { Request, Response } from 'express';
 import { AudioService } from './audio.service';
 
 @ApiTags('audio')
 @Controller('/api/audio')
 export class AudioController {
+    private readonly logger = new Logger(AudioController.name);
+    
     constructor(private readonly audioService: AudioService) {}
 
     @Get('/')
@@ -51,17 +53,35 @@ export class AudioController {
     })
     @ApiResponse({ status: 200, description: 'Audio extracted successfully' })
     @ApiResponse({ status: 500, description: 'Error extracting audio' })
-    async extractAudio(@Body() body: { url: string }, @Res() res: Response) {
+    async extractAudio(@Body() body: { url: string }, @Req() req: Request, @Res() res: Response) {
         const { url } = body;
-        console.log('URL:', url);
+        this.logger.log(`Received extract-audio request for URL: ${url}`);
+        
+        // Set CORS headers explicitly
+        res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
+        res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+        res.header('Access-Control-Allow-Headers', 'Content-Type, Accept, Authorization');
+        res.header('Access-Control-Allow-Credentials', 'true');
+
+        if (!url) {
+            this.logger.error('No URL provided in request body');
+            return res.status(400).json({
+                message: 'URL is required',
+                error: 'Missing URL parameter'
+            });
+        }
 
         try {
-            const audio = await this.audioService.downloadInstagramAudioAsMP3(body.url)
+            this.logger.log(`Starting audio extraction for: ${url}`);
+            const audio = await this.audioService.downloadInstagramAudioAsMP3(url);
+            this.logger.log('Audio extraction completed successfully');
+            
             return res.status(200).json({
                 message: 'Audio extracted successfully',
                 audio
             });
         } catch (error) {
+            this.logger.error(`Error extracting audio: ${error.message}`, error.stack);
             return res.status(500).json({
                 message: 'Error extracting audio',
                 error: error.message

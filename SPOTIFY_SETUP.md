@@ -18,7 +18,7 @@ This guide will help you set up the Spotify playlist creation feature for VibeTh
    - **App name**: VibeThread (or your preferred name)
    - **App description**: Audio extraction and playlist creation tool
    - **Website**: Your website URL (optional)
-   - **Redirect URI**: `http://localhost:3001/spotify-callback`
+   - **Redirect URI**: `https://vibethread.praneethd.xyz/spotify-callback`
 5. Accept the terms and create the app
 
 ### 2. Get Your Credentials
@@ -39,7 +39,7 @@ This guide will help you set up the Spotify playlist creation feature for VibeTh
 ### 4. Set Redirect URI
 
 Make sure your Spotify app has the correct redirect URI configured:
-- **Redirect URI**: `http://localhost:3001/spotify-callback`
+- **Redirect URI**: `https://vibethread.praneethd.xyz/spotify-callback`
 
 This should match the frontend URL where the callback page is hosted.
 
@@ -103,8 +103,8 @@ The implementation includes comprehensive error handling for:
    - Only tracks with valid Spotify IDs can be added to playlists
 
 4. **OAuth redirect issues**
-   - Ensure the redirect URI in Spotify app settings matches exactly: `http://localhost:3001/spotify-callback`
-   - Check that the frontend is running on port 3001
+   - Ensure the redirect URI in Spotify app settings matches exactly: `https://vibethread.praneethd.xyz/spotify-callback`
+   - Check that the frontend is running on the correct domain
 
 ### Development vs Production
 
