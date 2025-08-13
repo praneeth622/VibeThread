@@ -56,12 +56,6 @@ export class AudioController {
     async extractAudio(@Body() body: { url: string }, @Req() req: Request, @Res() res: Response) {
         const { url } = body;
         this.logger.log(`Received extract-audio request for URL: ${url}`);
-        
-        // Set CORS headers explicitly
-        res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
-        res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-        res.header('Access-Control-Allow-Headers', 'Content-Type, Accept, Authorization');
-        res.header('Access-Control-Allow-Credentials', 'true');
 
         if (!url) {
             this.logger.error('No URL provided in request body');
